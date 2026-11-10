@@ -101,19 +101,25 @@ Everything else (planner, controller, plant, CAD) exists to *find, track and ver
 
 A held part is a rigid body at rest: `ΣF = 0`, `ΣM = 0`. Vertically the fingertips must supply a friction force equal to the weight:
 
-$$\sum_i v_i = W = m g .$$
+```math
+\sum_i v_i = W = m g .
+```
 
 ### 2.2 Coulomb friction and the friction cone
 
 At each contact the tangential force obeys
 
-$$|F_t| \le \mu N \qquad\Longleftrightarrow\qquad \text{force lies inside a cone of half-angle } \alpha=\arctan\mu .$$
+```math
+|F_t| \le \mu N \qquad\Longleftrightarrow\qquad \text{force lies inside a cone of half-angle } \alpha=\arctan\mu .
+```
 
 ### 2.3 The simplest no-slip bound
 
 With `n` identical pads each carrying `μN` vertically: `n μ N ≥ m g`, hence
 
-$$N_{slip}= \frac{m g}{n\,\mu} \qquad (\texttt{materials.truth}).$$
+```math
+N_{slip}= \frac{m g}{n\,\mu} \qquad (\text{materials.truth}).
+```
 
 With a planned grasp the factor `n` is replaced by the planner's real contact layout:
 `N_slip = m g /(μ · fric_gain)`, where `fric_gain = W/(μ F_req)` (`plan_from_alt`, `GRASP_FG`). In other words **`N_slip` is exactly the planner's minimum holding force `F_req` per reference finger.**
@@ -134,7 +140,9 @@ Naive 5-finger estimates for the built-in specimens (before the planner refines 
 Real parts have curved or tilted walls. A fingertip pushes horizontally (direction `−u`), but the surface normal `n` is tilted. The friction cone must still contain the resultant.
 
 * **Necessary test** (vectorised pre-filter in `_search1`): the angle between normal and push direction must stay inside the cone,
-  $$\cos\theta \ge \cos(\arctan\mu)=\frac{1}{\sqrt{1+\mu^2}} .$$
+  ```math
+  \cos\theta \ge \cos(\arctan\mu)=\frac{1}{\sqrt{1+\mu^2}} .
+  ```
 * **Exact per-contact capacity** (`hand.friction_vmax`): given the horizontal push `p = −u` and normal `m = −n_out`, find the largest extra *vertical* friction force `v` such that the total tangential force stays on the cone. With `N0 = p·m`, `N1 = e_z·m`, `a = p − N0 m`, `b = e_z − N1 m` the condition `|a + v b|² ≤ μ²(N0 + v N1)²` is the quadratic `A v² + B v + C ≤ 0`:
   `A = b·b − μ²N1²`, `B = 2(a·b − μ²N0N1)`, `C = a·a − μ²N0²`. The code returns the larger root; a negative value means "the horizontal push alone is already outside the cone" → the grasp is rejected (`'contact normal outside friction cone'`).
 
@@ -142,7 +150,9 @@ Real parts have curved or tilted walls. A fingertip pushes horizontally (directi
 
 Fingers on opposite sides push horizontally with forces `g_i F u_i` (weights `g_i`). For the part not to be shoved or spun, the planar force/torque rows must vanish:
 
-$$\sum_i g_i\,u_{i,x}=0,\qquad \sum_i g_i\,u_{i,y}=0,\qquad \sum_i g_i\,(x_i u_{i,y}-y_i u_{i,x})=0 .$$
+```math
+\sum_i g_i\,u_{i,x}=0,\qquad \sum_i g_i\,u_{i,y}=0,\qquad \sum_i g_i\,(x_i u_{i,y}-y_i u_{i,x})=0 .
+```
 
 `hand.balance_gains` solves `A g = 0` with `g_i ≥ G_MIN = 0.15` and `g` as uniform as possible (iterative pseudo-inverse with active-set clamping). If no non-negative solution exists the candidate is discarded (`'no force balance'`).
 
@@ -150,11 +160,15 @@ $$\sum_i g_i\,u_{i,x}=0,\qquad \sum_i g_i\,u_{i,y}=0,\qquad \sum_i g_i\,(x_i u_{
 
 Contact `i` can supply a vertical friction force `0 ≤ v_i ≤ κ_i g_i F` (`κ_i` from §2.4). The weight acts at the centre of mass (COM), so both force **and moment** must balance:
 
-$$\sum v_i = W,\qquad \sum v_i\,x_i = W\,x_{com},\qquad \sum v_i\,y_i = W\,y_{com}.$$
+```math
+\sum v_i = W,\qquad \sum v_i\,x_i = W\,x_{com},\qquad \sum v_i\,y_i = W\,y_{com}.
+```
 
 The set of achievable `(ΣF, ΣMx, ΣMy)` triples for `0 ≤ v_i ≤ κ_i g_i F` is a **zonotope** (a Minkowski sum of line segments). `hand.required_force` tests membership exactly using its support function over every face normal `d = aᵢ × aⱼ`, and returns the smallest `F` for which the weight vector lies inside:
 
-$$F_{req}=\max_d \frac{d\cdot b}{\sum_i \kappa_i g_i \max(0,\,a_i\cdot d)} .$$
+```math
+F_{req}=\max_d \frac{d\cdot b}{\sum_i \kappa_i g_i \max(0,\,a_i\cdot d)} .
+```
 
 Degenerate cases are handled explicitly: with only two (or collinear) contacts the zonotope is flat; the COM must lie on the pinch line or the part pivots like a pendulum, so the code multiplies `F_req` by a penalty `1 + 60·max(off − 2 mm, 0)` where `off` is the COM distance from that line.
 
@@ -185,15 +199,21 @@ Linear elasticity, small strains, smooth non-conforming surfaces, contact radius
 
 Contact modulus and effective radius:
 
-$$\frac{1}{E^*}=\frac{1-\nu_1^2}{E_1}+\frac{1-\nu_2^2}{E_2},\qquad \frac{1}{R^*}=\frac{1}{R_1}+\frac{1}{R_2}.$$
+```math
+\frac1{E^{\ast}}=\frac{1-\nu_1^2}{E_1}+\frac{1-\nu_2^2}{E_2},\qquad \frac1{R^{\ast}}=\frac1{R_1}+\frac1{R_2}.
+```
 
 For a flat part `R_obj = ∞`, so `R* = R_pad` (`r_eff`). Then
 
-$$a=\Bigl(\frac{3FR^*}{4E^*}\Bigr)^{1/3},\qquad p_0=\frac{3F}{2\pi a^2},\qquad \delta=\frac{a^2}{R^*},\qquad F=K\delta^{3/2},\ \ K=\tfrac43E^*\sqrt{R^*}.$$
+```math
+a=\Bigl(\frac{3FR^{\ast}}{4E^{\ast}}\Bigr)^{1/3},\qquad p_0=\frac{3F}{2\pi a^2},\qquad \delta=\frac{a^2}{R^{\ast}},\qquad F=K\delta^{3/2},\ \ K=\tfrac43E^{\ast}\sqrt{R^{\ast}}.
+```
 
 Inverting `p0(F)` gives the force at which the peak pressure reaches an allowed value (`force_for_p0`):
 
-$$F=\frac{\pi^3 R^{*2}\,p_0^3}{6\,E^{*2}} .$$
+```math
+F=\frac{\pi^3 R^{\ast 2}\,p_0^3}{6\,E^{\ast 2}} .
+```
 
 *(Derivation: substitute `a²=(3FR*/4E*)^{2/3}` into `p0 = 3F/2πa²`, cube both sides and solve for `F`.)*
 
@@ -210,7 +230,9 @@ $$F=\frac{\pi^3 R^{*2}\,p_0^3}{6\,E^{*2}} .$$
 
 Hertz stresses peak **below** the surface. Along the axis, with `ζ = z/a`:
 
-$$\sigma_z=-\frac{p_0}{1+\zeta^2},\qquad \sigma_r=\sigma_\theta=-p_0\Bigl[(1+\nu)\bigl(1-\zeta\arctan\tfrac1\zeta\bigr)-\frac{1}{2(1+\zeta^2)}\Bigr].$$
+```math
+\sigma_z=-\frac{p_0}{1+\zeta^2},\qquad \sigma_r=\sigma_\theta=-p_0\Bigl[(1+\nu)\bigl(1-\zeta\arctan\tfrac1\zeta\bigr)-\frac{1}{2(1+\zeta^2)}\Bigr].
+```
 
 The code evaluates them at **`ζ = 0.48`** (`ZETA`): for `ν≈0.3` the maximum shear stress `τ = |σr − σz|/2 ≈ 0.31 p0` sits at `z ≈ 0.48a` (Johnson, *Contact Mechanics*, §3.3). Worked example — apple, `N = 1.5·N_slip = 0.84 N`:
 `a = 1.74 mm`, `p0 = 133 kPa`, `δ = 0.20 mm`, representative strain `0.2a/R* = 2.3 %`, `σz/p0 = −0.81`, `σr/p0 = −0.22`, `τ_axis/p0 = 0.30`.
@@ -219,7 +241,9 @@ The code evaluates them at **`ζ = 0.48`** (`ZETA`): for `ν≈0.3` the maximum 
 
 When a tangential force `Q` is applied, the contact does not slip all at once: an inner **stick zone** of radius `c` survives while the outer annulus slips:
 
-$$\frac{c}{a}=\Bigl(1-\frac{Q}{\mu N}\Bigr)^{1/3}\qquad(\texttt{c\_over\_a},\ q=\min(1,|f_y|/\mu N)).$$
+```math
+\frac{c}{a}=\Bigl(1-\frac{Q}{\mu N}\Bigr)^{1/3}\qquad(q=\min(1,|f_y|/\mu N)).
+```
 
 `c/a = 1` ⇒ full stick; `c/a → 0` ⇒ gross sliding. The dashboard shows it as the *Mindlin stick zone* gauge. The mobilised friction coefficient is `μ_mob = min(μ, |f_y|/N)` and the shear traction at the patch edge is `τ_edge = μ_mob p0`.
 
@@ -227,10 +251,14 @@ $$\frac{c}{a}=\Bigl(1-\frac{Q}{\mu N}\Bigr)^{1/3}\qquad(\texttt{c\_over\_a},\ q=
 
 With `τ_axis = |σr−σz|/2` and `τ_edge`:
 
-$$\sigma_{Tresca}=2\sqrt{\tau_{axis}^2+\tau_{edge}^2},\qquad
-\sigma_{VM}=\sqrt{(\sigma_r-\sigma_z)^2+3\tau_{edge}^2},$$
+```math
+\sigma_{Tresca}=2\sqrt{\tau_{axis}^2+\tau_{edge}^2},\qquad
+\sigma_{VM}=\sqrt{(\sigma_r-\sigma_z)^2+3\tau_{edge}^2},
+```
 
-$$\sigma_{Rankine}=\frac{1-2\nu}{3}\,p_0+\frac{(4+\nu)\pi}{8}\,\mu_{mob}\,p_0 .$$
+```math
+\sigma_{Rankine}=\frac{1-2\nu}{3}\,p_0+\frac{(4+\nu)\pi}{8}\,\mu_{mob}\,p_0 .
+```
 
 The last line is the peak **tensile** stress at the trailing edge of a sliding contact (Johnson; Hamilton) — the one that cracks brittle parts such as glass.
 
@@ -242,7 +270,9 @@ The last line is the peak **tensile** stress at the trailing edge of a sliding c
   * brittle: `p_allow = strength / (max((1−2ν)/3, 0.05)·SF)` (the Rankine edge-tension factor of §3.6)
   * shell: no pressure limit, a force limit `F_allow` (default 10 N) instead.
 * **Force ceiling:** `N_hertz = force_for_p0(p_allow)`, and
-  $$N_{max}=\min(N_{hertz},\,F_{allow},\,F_{max}=40\,\text{N}).$$
+  ```math
+  N_{max}=\min(N_{hertz},\,F_{allow},\,F_{max}=40\,\text{N}).
+  ```
 
 ### 3.8 Grip windows for the built-in specimens (`python -m grip_gz.materials`)
 
@@ -281,7 +311,9 @@ Peak stress is a tensor; failure needs a **scalar rule**. Five classical theorie
 
 `failure_study()` sweeps `N` from 0.01 N to 500 N, finds by **log-bisection** the force at which each theory reaches `1/FoS` (never below `N_slip`, since below that the part isn't held), and `decision()` returns
 
-$$\text{window}=\bigl[\,1.25\,N_{slip},\ \min(N_{perm},F_{other})\,\bigr],\quad F_{other}=\min(F_{max},F_{allow}).$$
+```math
+\text{window}=\bigl[\,1.25\,N_{slip},\ \min(N_{perm},F_{other})\,\bigr],\quad F_{other}=\min(F_{max},F_{allow}).
+```
 
 If the window is empty the dashboard says **NO SAFE GRIP** and suggests more friction, a larger pad radius, more fingers or a lighter part.
 
@@ -297,7 +329,9 @@ All in `nptel_priority.tensor_report` + `mech_extras` (the module is named after
 
 At `z=0.48a` in axes `(r, θ, z)`:
 
-$$\boldsymbol\sigma=\begin{bmatrix}\sigma_r&0&\tau_{edge}\\0&\sigma_\theta&0\\\tau_{edge}&0&\sigma_z\end{bmatrix}.$$
+```math
+\boldsymbol\sigma=\begin{bmatrix}\sigma_r&0&\tau_{edge}\\0&\sigma_\theta&0\\\tau_{edge}&0&\sigma_z\end{bmatrix}.
+```
 
 * **Symmetry** `σ=σᵀ` is *moment equilibrium of an infinitesimal cube* (checked: `max|S−Sᵀ|`).
 * **Cauchy's formula**: traction on a plane with unit normal `n` is `t = σ n`; normal part `σn = t·n`; shear part `τ = |t − σn n|`.
@@ -307,23 +341,31 @@ $$\boldsymbol\sigma=\begin{bmatrix}\sigma_r&0&\tau_{edge}\\0&\sigma_\theta&0\\\t
 
 ### 5.2 Invariants, hydrostatic and deviatoric parts
 
-$$I_1=\operatorname{tr}\boldsymbol\sigma,\quad I_2=\tfrac12(I_1^2-\operatorname{tr}\boldsymbol\sigma^2),\quad I_3=\det\boldsymbol\sigma$$
+```math
+I_1=\mathrm{tr}\boldsymbol\sigma,\quad I_2=\tfrac12(I_1^2-\mathrm{tr}\boldsymbol\sigma^2),\quad I_3=\det\boldsymbol\sigma
+```
 
 These don't change when axes rotate (checked: `dI1, dI2, dI3`). Split `σ = σm I + s` with `σm = I1/3` (volume change) and deviator `s` (shape change). Then
 
-$$J_2=\tfrac12 s_{ij}s_{ij},\quad \sigma_{VM}=\sqrt{3J_2},\quad \tau_{oct}=\sqrt{2J_2/3},\quad \sigma_{VM}=\tfrac{3}{\sqrt2}\tau_{oct}.$$
+```math
+J_2=\tfrac12 s_{ij}s_{ij},\quad \sigma_{VM}=\sqrt{3J_2},\quad \tau_{oct}=\sqrt{2J_2/3},\quad \sigma_{VM}=\tfrac{3}{\sqrt2}\tau_{oct}.
+```
 
 The **Lode angle** from `J3=det s` locates the stress state between triaxial and pure-shear.
 
 ### 5.3 Hooke's law and the isotropic constants
 
-$$\boldsymbol\varepsilon=\frac{1+\nu}{E}\boldsymbol\sigma-\frac{\nu}{E}I_1\mathbf I,\qquad G=\frac{E}{2(1+\nu)},\quad K=\frac{E}{3(1-2\nu)},\quad \lambda=\frac{E\nu}{(1+\nu)(1-2\nu)}.$$
+```math
+\boldsymbol\varepsilon=\frac{1+\nu}{E}\boldsymbol\sigma-\frac{\nu}{E}I_1\mathbf I,\qquad G=\frac{E}{2(1+\nu)},\quad K=\frac{E}{3(1-2\nu)},\quad \lambda=\frac{E\nu}{(1+\nu)(1-2\nu)}.
+```
 
 Checks the code prints: `e_v = σm/K` (volumetric), `τmax = G γmax` (max shear strain `γmax=ε1−ε3`), `τoct = G γoct`.
 
 ### 5.4 Strain energy and why Von Mises is "distortion energy"
 
-$$U=\tfrac12\sigma_{ij}\varepsilon_{ij}=\underbrace{\tfrac12\sigma_m e_v}_{\text{volume change}}+\underbrace{\frac{J_2}{2G}}_{\text{shape change}}.$$
+```math
+U=\tfrac12\sigma_{ij}\varepsilon_{ij}=\underbrace{\tfrac12\sigma_m e_v}_{\text{volume change}}+\underbrace{\frac{J_2}{2G}}_{\text{shape change}}.
+```
 
 Yield (ductile) is driven by the second term, which is why `σVM=√(3J2)` is the yield measure. The page verifies `U_vol + U_dist = U` to rounding error.
 
@@ -331,7 +373,9 @@ Yield (ductile) is driven by the second term, which is why `σVM=√(3J2)` is th
 
 `equilibrium_element` builds the six face tractions of a small cube in the Hertz field (using `_hertz_cart`, a point-load Boussinesq superposition on a polar grid) and checks
 
-$$\frac{\partial\sigma_{ij}}{\partial x_j}+\rho b_i=0 .$$
+```math
+\frac{\partial\sigma_{ij}}{\partial x_j}+\rho b_i=0 .
+```
 
 Result: the residual is at finite-difference level; and the **body force** `ρg` is orders of magnitude below the stress gradient `p0/a` (≈ 10⁻⁴ for the apple example above) — the object's own weight is irrelevant *inside* the contact patch; it matters only through the friction force `fy`.
 
@@ -378,7 +422,9 @@ The page prints their maximum relative disagreement (it is at numerical-integrat
 
 **Joints dominate.** The real finger is a rigid-link-plus-spring mechanism: joint torsion springs `k = (30, 20, 12) N·m/rad`. With lever arms `l_k` from joint `k` to the contact point, Castigliano on the springs gives
 
-$$\delta_{joint}=\frac{\partial}{\partial F}\sum_k\frac{(F\,l_k)^2}{2k_k}=F\sum_k\frac{l_k^2}{k_k}\;=\;F\cdot\texttt{compliance\_along\_normal}.$$
+```math
+\delta_{joint}=\frac{\partial}{\partial F}\sum_k\frac{(F\,l_k)^2}{2k_k}=F\sum_k\frac{l_k^2}{k_k}\;=\;F\cdot\text{compliance along normal}.
+```
 
 For a 20×22 mm aluminium phalanx block this is about 10³ times the phalanx bending, so phalanx bending is a sub-percent correction (the GUI prints the exact ratio for the selected section). That justifies the model used by the plant: *rigid links + springs*.
 
@@ -395,12 +441,16 @@ Weights use `g_eff = g + a_lift = 9.81 + 2.0 m/s²` (lifting acceleration).
 
 Stresses at angle `φ` around the section:
 
-$$\sigma=\frac{F}{A}+\frac{M r}{I}\cos\varphi,\qquad \tau=\frac{T r}{J}+\tau_V\sin\varphi,\qquad
-\tau_V=\frac{4V(r_o^2+r_o r_i+r_i^2)}{3\pi(r_o^4-r_i^4)}$$
+```math
+\sigma=\frac{F}{A}+\frac{M r}{I}\cos\varphi,\qquad \tau=\frac{T r}{J}+\tau_V\sin\varphi,\qquad
+\tau_V=\frac{4V(r_o^2+r_o r_i+r_i^2)}{3\pi(r_o^4-r_i^4)}
+```
 
 (the last is the exact peak shear of a hollow circular tube). Principal stresses `σ1,2 = σ/2 ± √((σ/2)²+τ²)`, `σ3 = 0`. Then:
 
-$$\sigma_{VM}=\sqrt{\sigma^2+3\tau^2},\qquad \sigma_{Tresca}=\sqrt{\sigma^2+4\tau^2},\qquad \text{twist } \phi=\frac{TL}{GJ},\qquad \text{tip deflection}=\frac{VL^3}{3EI}+\frac{M_{tip}L^2}{2EI}.$$
+```math
+\sigma_{VM}=\sqrt{\sigma^2+3\tau^2},\qquad \sigma_{Tresca}=\sqrt{\sigma^2+4\tau^2},\qquad \text{twist } \phi=\frac{TL}{GJ},\qquad \text{tip deflection}=\frac{VL^3}{3EI}+\frac{M_{tip}L^2}{2EI}.
+```
 
 Worked example (1 kg part): `M ≈ 2.9 N·m`, `σ ≈ 4.8 MPa`, `τ_T ≈ 0.15 MPa`, `τ_V ≈ 0.22 MPa`, Von Mises ≈ 5 MPa → factor of safety ≈ 50 against 250 MPa. `wrist_m_allow` bisects for the heaviest mass that still meets `FoS ≥ 2`.
 
@@ -412,7 +462,9 @@ Eggs, PET bottles and glass tumblers are **thin-walled** (`t ≪ R`):
 
 * Pressurised: hoop `σθ = pR/t`, longitudinal `σL = pR/(2t)`; thick-wall Lamé `σr = A − B/r²`, `σθ = A + B/r²` (spheres: `A − 2B/r³`, `A + B/r³`) for the sealed / pressurised tube demo (`ASSUME['tube_demo']`).
 * **Thin ring under a diametral squeeze** (a finger pair pressing a shell): by Castigliano with `∂U/∂M0 = 0`,
-  $$M_{load}=\frac{PR}{\pi}\approx0.318\,PR,\qquad \Delta D=\Bigl(\frac\pi4-\frac2\pi\Bigr)\frac{PR^3}{EI}\approx0.149\,\frac{PR^3}{EI},\qquad \sigma_b=\frac{6M}{t^2}.$$
+  ```math
+  M_{load}=\frac{PR}{\pi}\approx0.318\,PR,\qquad \Delta D=\Bigl(\frac\pi4-\frac2\pi\Bigr)\frac{PR^3}{EI}\approx0.149\,\frac{PR^3}{EI},\qquad \sigma_b=\frac{6M}{t^2}.
+  ```
   These are the "0.318" and "0.149" constants in the code (`ring_castigliano` derives them numerically).
 * **Buckling**: Euler `Pcr = π²EI/(KL)²` (`K=1` pinned, `0.5` fixed, `2` cantilever; thin tube `I=πR³t`), classical shell `Pcr = 2πEt²/√(3(1−ν²))` with a 0.2 knock-down (real shells are imperfection-sensitive). Beyond Euler: Johnson parabola for short columns and the secant formula for an eccentric load (`column_regimes`).
 
@@ -442,8 +494,10 @@ Available as importable functions (they back the NPTEL-style topic list; most ar
 
 A planar 2-link arm (`L1=L2=0.40 m`, shoulder at `(−0.55, 0.25)` m) moves the wrist to a point `(wx, wz)`. With `X = wx − xs`, `D = zs − wz` the **law of cosines** gives the elbow angle and then the shoulder angle:
 
-$$\cos\theta_2=\frac{X^2+D^2-L_1^2-L_2^2}{2L_1L_2},\quad
-\theta_1=\operatorname{atan2}(D,X)-\operatorname{atan2}\bigl(L_2\sin\theta_2,\;L_1+L_2\cos\theta_2\bigr),\quad \theta_3=-(\theta_1+\theta_2).$$
+```math
+\cos\theta_2=\frac{X^2+D^2-L_1^2-L_2^2}{2L_1L_2},\quad
+\theta_1=\mathrm{atan2}(D,X)-\mathrm{atan2}\bigl(L_2\sin\theta_2,\;L_1+L_2\cos\theta_2\bigr),\quad \theta_3=-(\theta_1+\theta_2).
+```
 
 `θ3` keeps the palm horizontal. The forward map is `x = xs + L1cosθ1 + L2cos(θ1+θ2)`, `z = zs − L1sinθ1 − L2sin(θ1+θ2)`. The tool-centre point is `0.06 m` below the wrist.
 
@@ -462,7 +516,9 @@ Planar finger kinematics: with cumulative angle `ψ = Σ q`, each link moves the
 
 A force `F` at the contact point produces joint torques `τ = Jᵀ F` (principle of virtual work). For joint `k` the torque is `|F·(lever_k)|`, where the lever is the perpendicular distance from the joint axis to the line of force. Each joint has a torque limit `τmax = (12, 8, 4) N·m`. The largest force the finger can exert at curl `s` is
 
-$$F_{avail}(s)=\min_k\frac{\tau_{max,k}}{|lever_k|}.$$
+```math
+F_{avail}(s)=\min_k\frac{\tau_{max,k}}{|lever_k|}.
+```
 
 The plant clips the commanded force to this value, and the dashboard shows the *MCP peak torque load* gauge (`τ/τmax`).
 
@@ -509,7 +565,9 @@ The controller does **not** know the object's mass, friction, stiffness or radiu
    * **Soft part** (`E*_flat < 0.97 E*_pad`, distinguishable from the pad alone): invert `E*_flat = 3K/(4√R*)` with `R*` from the CAD/vision prior, then `1/E* = 1/E*_pad + (1−ν²)/E_obj` (assumes `ν_obj=0.3`) → `E_obj`.
    * **Stiff part**: `E*` is pad-limited, so `K` instead reveals the radius `R* = (3K/4E*_pad)²`, and `E_obj` can only be bounded from below.
 5. **Strain cap** (the link from mechanics to control): Tabor's representative strain `ε = 0.2 a/R*` with `a²=R*δ` gives `ε = 0.2√(δ/R*)`. Limiting `ε ≤ ε_allow = 5 %` gives a maximum indentation `δ_lim = (ε_allow/0.2)² R_pad` and therefore
-   $$N_{cap}=K\,\delta_{lim}^{3/2}\quad(\le F_{max}).$$
+   ```math
+   N_{cap}=K\,\delta_{lim}^{3/2}\quad(\le F_{max}).
+   ```
    **The controller discovers its own crushing limit from one squeeze.**
 6. **LIFT/HOLD — slip control**. Two kinds of events:
    * **Probe**: every `0.4 s` add a small normal "bump" `Δfz` (≥ 3×noise floor). *Physics:* if the part is **stuck**, the tangential force is fixed by the weight and does not respond to extra normal force (`Δfy≈0`). If the contact is **at its friction limit / slipping**, `fy = μN` so `Δfy/Δfz ≈ μ`. Slip is declared when `Δfy/Δfz > 0.15` and `Δfy` exceeds its noise gate. The ratio is the *measured mobilised friction coefficient* (`alpha_d`).
@@ -530,19 +588,25 @@ A small, **unconditionally stable** simulator of the finger drives, the contact 
 
 **Fingers.** Each finger is a mass–damper (`m_f=50 g`, `b=8 N·s/m`) with the drive force `F·g_i`. Closing speed is limited as in §7.6. On first reaching the planned contact travel `x_c` the finger takes a normal force `N = min(F g_i, F_avail)`, and the pad indents by the Hertz approach plus the finger compliance:
 
-$$x_f=x_c+\delta_{Hertz}(N)+C(s)\,N,\qquad \delta_{Hertz}=\frac{a^2}{R^*},\quad C=\sum_k \frac{lever_k^2}{k_k}.$$
+```math
+x_f=x_c+\delta_{Hertz}(N)+C(s)\,N,\qquad \delta_{Hertz}=\frac{a^2}{R^{\ast}},\quad C=\sum_k \frac{lever_k^2}{k_k}.
+```
 
 First-order contact settling with `τ = 2.5 ms`.
 
 **Part.** The part is a mass on a **tangential spring–damper** at the pads: stiffness `k_t = 4000 N/m` per contact, damping `c_t = 2ζ√(k_t m)` with `ζ = 0.7` (close to the optimum for fast settling). The state is the elastic tangential displacement `w`, the part's height `z_o` and velocity `v_o`. Newton's law per step (implicit Euler, which is why large stiffness cannot blow up):
 
-$$m\,\dot v_o=F_t-mg,\qquad F_t=-k_t w-c_t(v_o-v_g),\qquad \dot w=v_o-v_g,$$
+```math
+m\,\dot v_o=F_t-mg,\qquad F_t=-k_t w-c_t(v_o-v_g),\qquad \dot w=v_o-v_g,
+```
 
 with `v_g` the gripper (hand) velocity.
 
 **Stick vs slip (Coulomb).** The friction capacity is
 
-$$F_{cap}=\mu\,\bigl(K_R\text{ if sliding else }1\bigr)\,N_{cap},\qquad K_R=0.85,$$
+```math
+F_{cap}=\mu\,\bigl(K_R\text{ if sliding else }1\bigr)\,N_{cap},\qquad K_R=0.85,
+```
 
 where `N_cap = fric_gain·ΣN/Σg` for a full grasp (the planned layout) or `½ΣN cos θ_i` while only some fingers touch. `K_R = 0.85` is the **static-to-kinetic** friction drop, giving realistic stick–slip hysteresis. If `|F_t| ≤ F_cap` the pads **stick** and the elastic strain carries on; otherwise `F_t = ±F_cap` (**slip**), `w = −F_t/k_t`, and the part accelerates. The part rests on the table when `z_o ≤ 0`. The tangential elastic strain `w` is also what the tangential sensors read, which is how the controller sees "slip" (§8).
 
@@ -607,7 +671,9 @@ Real downloaded meshes are messy; the pipeline turns them into a clean solid wit
 8. **Grasp height**: `z_g = clamp(z_COM, 0.4h, 0.75h)`; the grasp-height section gives the width and the **local contact radii**: a least-squares circle `x²+y²+2ax+2by=c` (→ `r² = c+a²+b²`) fitted to the outline near each y-extreme (horizontal) and to the vertical profile (vertical). If the points are collinear → flat (`R=∞`). The Hertz `R_obj` is the smaller of the two sides (geometric mean of horizontal and vertical when both are curved).
 9. **Material → numbers**: table of 16 materials (steel … foam, fruit, thin shell) giving `ρ, μ, E, ν`, strength and failure kind; `p_allow` as in §3.7. Any value can be overridden (`--mu --E --nu --strength --F-allow --R-contact --kind --mass --density`).
 10. **Signed-distance volume** (`Shape._build_grid`): per slice, the exact 2-D distance to the outline (KD-tree on the outline sampled at `res/4`, sign by even–odd fill) stacked into a `(levels × ny × nx)` float32 volume (≤ 12 M cells, 60 mm margin for the hand), with **trilinear lookup** for any query. The 3-D distance of an extruded prism is composed as
-    $$d=\min(\max(d_{xy},d_z),0)+\bigl\|\max\bigl((d_{xy},d_z),0\bigr)\bigr\|.$$
+    ```math
+    d=\min(\max(d_{xy},d_z),0)+\bigl\|\max\bigl((d_{xy},d_z),0\bigr)\bigr\|.
+    ```
     Beyond the stored field the distance to its edge is added. This one SDF is what the **planner, clearance monitor and physics proxy all share**, so they agree on the geometry.
 
 ---
