@@ -185,7 +185,7 @@ Linear elasticity, small strains, smooth non-conforming surfaces, contact radius
 
 Contact modulus and effective radius:
 
-$$\frac1{E^*}=\frac{1-\nu_1^2}{E_1}+\frac{1-\nu_2^2}{E_2},\qquad \frac1{R^*}=\frac1{R_1}+\frac1{R_2}.$$
+$$\frac{1}{E^*}=\frac{1-\nu_1^2}{E_1}+\frac{1-\nu_2^2}{E_2},\qquad \frac{1}{R^*}=\frac{1}{R_1}+\frac{1}{R_2}.$$
 
 For a flat part `R_obj = ∞`, so `R* = R_pad` (`r_eff`). Then
 
