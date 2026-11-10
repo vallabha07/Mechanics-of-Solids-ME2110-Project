@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>grip_gz</name>
+  <version>0.2.0</version>
+  <description>Mechanics of Solids adaptive grip force control simulation in MuJoCo</description>
+  <maintainer email="co25btech11020@iith.ac.in">student</maintainer>
+  <license>MIT</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
